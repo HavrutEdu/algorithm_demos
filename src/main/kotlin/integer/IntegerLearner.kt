@@ -1,6 +1,6 @@
-package integer.sum
+package integer
 
-interface IntegerSumLearner {
+interface IntegerLearner {
     fun updateBeliefs(x: Int, y: Int, ans: Int)
     fun predictAnswer(x: Int, y: Int): Int
 }

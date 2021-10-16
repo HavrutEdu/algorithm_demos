@@ -1,14 +1,9 @@
 package integer.sum
 
-import utils.chooseRandomIndex
+import integer.Hypothesis
+import integer.IntegerBayesianLearner
 import kotlin.math.abs
 import kotlin.math.pow
-
-/**
- * [name] is a human-readable hypothesis description
- * [probability] is a probabilistic distribution (x, y, sum) -> probability
- * */
-class Hypothesis(val name: String, val probability: (Int, Int, Int) -> Double)
 
 fun correctSumUpToNHypothesis(n: Int, alpha: Double = 0.9): Hypothesis =
     Hypothesis("Correct when x, y in 0..$n") { x: Int, y: Int, sum: Int ->
@@ -22,31 +17,11 @@ fun correctSumUpToNHypothesis(n: Int, alpha: Double = 0.9): Hypothesis =
         }
     }
 
-class MaxXYIntSumLearner(val pivotValues: List<Int>) : IntegerSumLearner {
+fun MaxXYIntSumLearner(pivotValues: List<Int>): IntegerBayesianLearner {
     val hypotheses: List<Hypothesis> = pivotValues.map { n -> correctSumUpToNHypothesis(n) }
     val beliefs: MutableList<Double> = MutableList(hypotheses.size) { i -> 1.0 / hypotheses.size }
 
-    override fun updateBeliefs(x: Int, y: Int, ans: Int) {
-        val newBeliefs = hypotheses.zip(beliefs).map { (hyp, prob) -> hyp.probability(x, y, ans) * prob }
-        val newBeliefsSum = newBeliefs.sum()
-
-        for (i in beliefs.indices)
-            beliefs[i] = newBeliefs[i] / newBeliefsSum
-    }
-
-    override fun predictAnswer(x: Int, y: Int): Int {
-        val selectHypothesis = hypotheses[chooseRandomIndex(beliefs)]
-        val reasonableAnswers = (0..100).toList()
-        val answerProbabilities = reasonableAnswers.map { ans -> selectHypothesis.probability(x, y, ans) }
-        return reasonableAnswers[chooseRandomIndex(answerProbabilities)]
-    }
-
-    override fun toString(): String {
-        return "${this.javaClass.simpleName}: pivotValues=$pivotValues\n" +
-                hypotheses.zip(beliefs).joinToString(separator = "\n", postfix = "\n") { (hypothesis, probability) ->
-                    "${hypothesis.name}: $probability"
-                }
-    }
+    return IntegerBayesianLearner(hypotheses, beliefs)
 }
 
 fun main() {
