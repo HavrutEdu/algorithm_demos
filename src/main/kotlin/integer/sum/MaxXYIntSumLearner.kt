@@ -6,7 +6,7 @@ import kotlin.math.abs
 import kotlin.math.pow
 
 fun correctSumUpToNHypothesis(n: Int, alpha: Double = 0.9): Hypothesis =
-    Hypothesis("Correct when x, y in 0..$n") { x: Int, y: Int, sum: Int ->
+    Hypothesis("Correct when x, y in 0..$n", hypothesisProbability = 1.0) { x: Int, y: Int, sum: Int ->
         val trueSum = x + y
         if (x in 0..n && y in 0..n) {
             if (sum == trueSum) 1.0 else 0.0
@@ -19,9 +19,7 @@ fun correctSumUpToNHypothesis(n: Int, alpha: Double = 0.9): Hypothesis =
 
 fun MaxXYIntSumLearner(pivotValues: List<Int>): IntegerBayesianLearner {
     val hypotheses: List<Hypothesis> = pivotValues.map { n -> correctSumUpToNHypothesis(n) }
-    val beliefs: MutableList<Double> = MutableList(hypotheses.size) { i -> 1.0 / hypotheses.size }
-
-    return IntegerBayesianLearner(hypotheses, beliefs)
+    return IntegerBayesianLearner(hypotheses)
 }
 
 fun main() {

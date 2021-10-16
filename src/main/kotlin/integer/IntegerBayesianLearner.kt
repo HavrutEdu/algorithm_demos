@@ -4,38 +4,43 @@ import utils.chooseRandomIndex
 
 /**
  * [name] is a human-readable hypothesis description
- * [probability] is a probabilistic distribution (x, y, ans) -> probability
+ * [hypothesisProbability] is a mutable internal state which is updated based on learning examples
+ * [probabilityFunction] is a probabilistic distribution (x, y, ans) -> probability
+ *
+ * Note that [hypothesisProbability] and [probabilityFunction] *don't* have to be normalised,
+ * e.i. their integral sum can be any positive number.
  * */
-class Hypothesis(val name: String, val probability: (Int, Int, Int) -> Double)
+class Hypothesis(
+    val name: String,
+    var hypothesisProbability: Double,
+    val probabilityFunction: (Int, Int, Int) -> Double
+) {
+    override fun toString() = "Hypothesis(p=$hypothesisProbability): $name"
+}
 
 /**
  * [IntegerBayesianLearner] learns to distinguish between [hypotheses]
- * by updating its [beliefs] when [updateBeliefs] is called with a new example.
+ * by updating internal [Hypothesis.hypothesisProbability] when [updateBeliefs] is called with a new example.
  */
-class IntegerBayesianLearner(
-    private val hypotheses: List<Hypothesis>,
-    private val beliefs: MutableList<Double>
-) : IntegerLearner {
+class IntegerBayesianLearner(private val hypotheses: List<Hypothesis>) : IntegerLearner {
 
     override fun updateBeliefs(x: Int, y: Int, ans: Int) {
-        val newBeliefs = hypotheses.zip(beliefs).map { (hyp, prob) -> hyp.probability(x, y, ans) * prob }
-        val newBeliefsSum = newBeliefs.sum()  // Normalisation factor
+        hypotheses.forEach { hyp -> hyp.hypothesisProbability *= hyp.probabilityFunction(x, y, ans) }
 
-        for (i in beliefs.indices)
-            beliefs[i] = newBeliefs[i] / newBeliefsSum
+        // Optional normalisation
+        val normalisationFactor = hypotheses.sumOf { it.hypothesisProbability }
+        hypotheses.forEach { hyp -> hyp.hypothesisProbability /= normalisationFactor }
     }
 
     override fun predictAnswer(x: Int, y: Int): Int {
-        val selectHypothesis = hypotheses[chooseRandomIndex(beliefs)]
+        val selectHypothesis = hypotheses[chooseRandomIndex(hypotheses.map { it.hypothesisProbability })]
         val reasonableAnswers = (0..100).toList()
-        val answerProbabilities = reasonableAnswers.map { ans -> selectHypothesis.probability(x, y, ans) }
+        val answerProbabilities = reasonableAnswers.map { ans -> selectHypothesis.probabilityFunction(x, y, ans) }
         return reasonableAnswers[chooseRandomIndex(answerProbabilities)]
     }
 
     override fun toString(): String {
         return "${this.javaClass.simpleName}\n" +
-                hypotheses.zip(beliefs).joinToString(separator = "\n", postfix = "\n") { (hypothesis, probability) ->
-                    "${hypothesis.name}: $probability"
-                }
+                hypotheses.joinToString(separator = "\n", postfix = "\n")
     }
 }
