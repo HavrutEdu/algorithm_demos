@@ -2,6 +2,8 @@ package fraction.sum
 
 import fraction.FractionBayesianLearner
 import fraction.Hypothesis
+import kotlin.math.exp
+import kotlin.math.pow
 
 fun fracSum(num1: Int, den1: Int, num2: Int, den2: Int): Pair<Int, Int> =
     if (den1 == den2) {
@@ -32,8 +34,22 @@ fun wrongAnswerValueBy(delta: Int): Hypothesis =
         }
     }
 
+fun approximateAnswerExponential(delta: Double): Hypothesis =
+    Hypothesis("Centered continuous", hypothesisProbability = 1.0) { num1, den1, num2, den2, num, den ->
+        val (trueNum, trueDen) = fracSum(num1, den1, num2, den2)
+
+        if (den != 0) {
+            val trueFrac =  trueNum.toDouble() / trueDen.toDouble()
+            val receivedFrac =  num.toDouble() / den.toDouble()
+            exp(-(receivedFrac - trueFrac).pow(2)) * delta
+        } else {
+            0.0
+        }
+    }
+
+
 fun FracSumLearner(): FractionBayesianLearner {
-    val hypotheses = listOf(trueSum()) + (-2..2).map { wrongAnswerValueBy(it) }
+    val hypotheses = listOf(trueSum()) + (-2..2).map { wrongAnswerValueBy(it) } + approximateAnswerExponential(0.5)
     return FractionBayesianLearner(hypotheses)
 }
 
