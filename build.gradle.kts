@@ -25,5 +25,10 @@ tasks.withType<KotlinCompile>() {
 }
 
 application {
-    mainClass.set("MainKt")
+    mainClass.set("demo.cli.CliModelRunnerKt")
+}
+
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
+    // project.setProperty("org.gradle.console", "plain")
 }
