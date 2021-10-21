@@ -1,6 +1,7 @@
 package fraction
 
 import utils.chooseRandomIndex
+import kotlin.math.roundToInt
 
 /**
  * [name] is a human-readable hypothesis description
@@ -15,7 +16,10 @@ class Hypothesis(
     var hypothesisProbability: Double,
     val probabilityFunction: (Int, Int, Int, Int, Int, Int) -> Double
 ) {
-    override fun toString() = "Hypothesis(p=$hypothesisProbability): $name"
+    override fun toString(): String {
+        val percentage = (hypothesisProbability * 100).roundToInt()
+        return "Hypothesis(p=$percentage%): $name"
+    }
 }
 
 /**
@@ -24,15 +28,16 @@ class Hypothesis(
  * when [updateBeliefs] is called with a new example.
  */
 class FractionBayesianLearner(private val hypotheses: List<Hypothesis>) : FractionLearner {
+    init {
+        normalize()
+    }
 
     override fun updateBeliefs(num1: Int, den1: Int, num2: Int, den2: Int, num: Int, den: Int) {
         hypotheses.forEach { hyp ->
             hyp.hypothesisProbability *= hyp.probabilityFunction(num1, den1, num2, den2, num, den)
         }
 
-        // Optional normalisation
-        val normalisationFactor = hypotheses.sumOf { it.hypothesisProbability }
-        hypotheses.forEach { hyp -> hyp.hypothesisProbability /= normalisationFactor }
+        normalize() // Optional
     }
 
     override fun predictAnswer(num1: Int, den1: Int, num2: Int, den2: Int): Pair<Int, Int> {
@@ -42,6 +47,11 @@ class FractionBayesianLearner(private val hypotheses: List<Hypothesis>) : Fracti
             selectHypothesis.probabilityFunction(num1, den1, num2, den2, num, den)
         }
         return reasonableAnswers[chooseRandomIndex(answerProbabilities)]
+    }
+
+    private fun normalize() {
+        val normalisationFactor = hypotheses.sumOf { it.hypothesisProbability }
+        hypotheses.forEach { hyp -> hyp.hypothesisProbability /= normalisationFactor }
     }
 
     override fun toString(): String {
