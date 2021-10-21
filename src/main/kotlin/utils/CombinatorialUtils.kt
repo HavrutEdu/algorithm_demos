@@ -17,3 +17,16 @@ fun chooseRandomIndex(weights: List<Double>): Int {
 
     throw IllegalStateException("ACUM $acum cannot be equal to SUM ${weights.sum()} and be less than RAND $rand")
 }
+
+
+/**
+ * Generates a sequence of all combinations of elements from [listA] and [listB]
+ */
+fun <A, B> allCombinations(listA: Iterable<A>, listB: Iterable<B>): Sequence<Pair<A, B>> =
+    sequence {
+        listA.forEach { a ->
+            listB.forEach { b ->
+                yield(Pair(a, b))
+            }
+        }
+    }

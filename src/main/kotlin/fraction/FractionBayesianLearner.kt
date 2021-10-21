@@ -1,5 +1,6 @@
 package fraction
 
+import utils.allCombinations
 import utils.chooseRandomIndex
 import kotlin.math.roundToInt
 
@@ -42,7 +43,7 @@ class FractionBayesianLearner(private val hypotheses: List<Hypothesis>) : Fracti
 
     override fun predictAnswer(num1: Int, den1: Int, num2: Int, den2: Int): Pair<Int, Int> {
         val selectHypothesis = hypotheses[chooseRandomIndex(hypotheses.map { it.hypothesisProbability })]
-        val reasonableAnswers = (0..20).zip(1..10)
+        val reasonableAnswers = allCombinations(0..20, 1..10).toList()
         val answerProbabilities = reasonableAnswers.map { (num, den) ->
             selectHypothesis.probabilityFunction(num1, den1, num2, den2, num, den)
         }
