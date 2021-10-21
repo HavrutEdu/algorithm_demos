@@ -34,13 +34,13 @@ fun wrongAnswerValueBy(delta: Int): Hypothesis =
         }
     }
 
-fun approximateAnswerExponential(scale: Double, maxDensity: Double): Hypothesis =
-    Hypothesis("Centered continuous scale $scale, maxDensity $maxDensity", hypothesisProbability = 1.0) { num1, den1, num2, den2, num, den ->
+fun approximateAnswerExponential(scale: Double, maxDensity: Double, shift: Double = 0.0): Hypothesis =
+    Hypothesis("truth + ($shift)", hypothesisProbability = 1.0) { num1, den1, num2, den2, num, den ->
         val (trueNum, trueDen) = fracSum(num1, den1, num2, den2)
 
         if (den != 0) {
-            val trueFrac =  trueNum.toDouble() / trueDen.toDouble()
-            val receivedFrac =  num.toDouble() / den.toDouble()
+            val trueFrac = trueNum.toDouble() / trueDen + shift
+            val receivedFrac = num.toDouble() / den
             exp(-((receivedFrac - trueFrac) * scale).pow(2)) * maxDensity
         } else {
             0.0
@@ -49,7 +49,11 @@ fun approximateAnswerExponential(scale: Double, maxDensity: Double): Hypothesis 
 
 
 fun FracSumLearner(): FractionBayesianLearner {
-    val hypotheses = listOf(trueSum()) + (-2..2).map { wrongAnswerValueBy(it) } + approximateAnswerExponential(1.0, 0.9)
+    val hypotheses = listOf<Hypothesis>() +
+            //trueSum() +
+            approximateAnswerExponential(10.0, 1.0) +
+            (-15..15 step 3).map { i -> approximateAnswerExponential(3.0, 0.3, shift = i / 10.0) }
+
     return FractionBayesianLearner(hypotheses)
 }
 
@@ -61,5 +65,8 @@ fun main() {
     println(learner)
 
     learner.updateBeliefs(1, 2, 1, 2, 2, 2)
+    println(learner)
+
+    learner.updateBeliefs(1, 3, 3, 4, 17, 12)
     println(learner)
 }
