@@ -25,7 +25,7 @@ sealed class Actions : TextIOModelRunner.Action() {
     }
 
     class GiveExample(val model: FractionLearner) : Actions() {
-        override val matchers = listOf(Regex("""(?:e|e:|example:)?\s*$frac${sep("+")}$frac${sep("=")}$frac\s*"""))
+        override val matchers = listOf(Regex("""\s*(?:e|e:|example:)?\s*$frac${sep("+")}$frac${sep("=")}$frac\s*"""))
         override val examples = listOf(" 1/2 + 1/3 = 5/6", "example: 1 2 1 3 5 6", "e 1/2+1 3= 5 6")
 
         override fun performAction(parsed: MatchResult) {
@@ -37,10 +37,10 @@ sealed class Actions : TextIOModelRunner.Action() {
 
     class TestModel(val model: FractionLearner) : Actions() {
         override val matchers = listOf(
-            Regex("""(?:t|t:|test:|\?)\s*$frac${sep("+")}$frac${sep("=")}$frac\s*"""),
-            Regex("""(?:t|t:|test:|\?)?\s*$frac${sep("+")}$frac${sep("=")}$frac\s*\?"""),
+            Regex("""\s*(?:t|t:|test:|\?)\s*$frac${sep("+")}$frac\s*"""),
+            Regex("""\s*(?:t|t:|test:|\?)?\s*$frac${sep("+")}$frac\s*\?"""),
         )
-        override val examples = listOf("t 1/2 + 1/3 = 5/6", "test:1 2 1 3 5 6", "1/2+1 3= 5 6?")
+        override val examples = listOf("t 1/2 + 1/3", "test:1 2 1 3", "1/2+1 3?")
 
         override fun performAction(parsed: MatchResult) {
             val (n1, d1, n2, d2) = parsed.groupValues.drop(1).map { it.toInt() } // pars error
@@ -58,7 +58,7 @@ sealed class Actions : TextIOModelRunner.Action() {
      * Utility functions to represent RegEx
      */
     internal fun sep(optionalChars: String): String = """(?:\s+|\s*[$optionalChars]\s*)"""
-    internal val frac = """(\d+)${sep("""\\""")}(\d+)"""
+    internal val frac = """(\d+)${sep("/")}(\d+)"""
 }
 
 
@@ -67,10 +67,10 @@ sealed class Actions : TextIOModelRunner.Action() {
  * Possible actions are described in [Actions]
  */
 class CliModelRunner(val model: FractionBayesianLearner) {
-    private val runner = TextIOModelRunner(
-        Actions.Exit(), Actions.TestModel(model),
-        Actions.PrintStatus(model), Actions.GiveExample(model)
+    val actions = listOf(
+        Actions.Exit(), Actions.PrintStatus(model), Actions.TestModel(model), Actions.GiveExample(model)
     )
+    val modelRunner = TextIOModelRunner(actions)
 
     fun runCliBlocking() {
         println("${model.javaClass.simpleName} is initialised")
@@ -79,7 +79,7 @@ class CliModelRunner(val model: FractionBayesianLearner) {
             val line = readLine() ?: continue
 
             try {
-                runner.performNextAction(line)
+                modelRunner.performNextAction(line)
             } catch (e: TextIOModelRunner.Action.ExitSignalException) {
                 println("=== end of demo ================")
                 break

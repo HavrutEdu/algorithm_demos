@@ -1,7 +1,7 @@
 package demo.text
 
 
-class TextIOModelRunner(vararg val actions: Action) {
+class TextIOModelRunner(private val actions: Collection<Action>) {
     abstract class Action {
         abstract val matchers: List<Regex>
         abstract val examples: List<String>
