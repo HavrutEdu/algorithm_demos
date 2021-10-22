@@ -25,7 +25,7 @@ tasks.withType<KotlinCompile>() {
 }
 
 application {
-    mainClass.set("demo.cli.CliModelRunnerKt")
+    mainClass.set("demo.text.cli.CliModelRunnerKt")
 }
 
 tasks.named<JavaExec>("run") {
